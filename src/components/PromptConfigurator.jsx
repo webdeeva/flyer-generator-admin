@@ -7,6 +7,7 @@ const PromptConfigurator = ({ basePrompt, customPrompt, setCustomPrompt, quality
     secondaryText: '',
     colors: '',
     style: '',
+    renderingStyle: '', // New field for rendering style
     additionalElements: [],
     elementDetails: {}, // Store details for each element
     hashtags: '' // For social media influencer prompts
@@ -32,6 +33,12 @@ const PromptConfigurator = ({ basePrompt, customPrompt, setCustomPrompt, quality
 
   const generatePrompt = (params) => {
     const promptAdditions = []
+    
+    // Add rendering style at the beginning if selected
+    if (params.renderingStyle) {
+      promptAdditions.push(`Rendering style: ${params.renderingStyle}`)
+    }
+    
     if (params.mainText) promptAdditions.push(`Main text: "${params.mainText}"`)
     if (params.secondaryText) promptAdditions.push(`Secondary text: "${params.secondaryText}"`)
     if (params.colors) promptAdditions.push(`Color scheme: ${params.colors}`)
@@ -100,6 +107,31 @@ const PromptConfigurator = ({ basePrompt, customPrompt, setCustomPrompt, quality
 
   return (
     <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Rendering Style
+        </label>
+        <select
+          value={parameters.renderingStyle}
+          onChange={(e) => updateParameter('renderingStyle', e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="">Default (Auto-selected)</option>
+          <option value="ultrarealistic photography">Ultrarealistic Photography</option>
+          <option value="photorealistic">Photorealistic</option>
+          <option value="3D render">3D Render</option>
+          <option value="cartoon illustration">Cartoon Illustration</option>
+          <option value="anime style">Anime Style</option>
+          <option value="watercolor painting">Watercolor Painting</option>
+          <option value="oil painting">Oil Painting</option>
+          <option value="digital art">Digital Art</option>
+          <option value="vector illustration">Vector Illustration</option>
+          <option value="sketch drawing">Sketch Drawing</option>
+          <option value="pop art style">Pop Art Style</option>
+          <option value="minimalist design">Minimalist Design</option>
+        </select>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Main Text (Title/Name)
