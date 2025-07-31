@@ -5,6 +5,7 @@ import { Upload, Image, AlertCircle, Loader, ArrowRight, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { generateStyleTransferFlyer, performFaceSwap } from '../lib/segmind'
 import { detectFaces } from '../lib/faceDetection'
+import PromptConfigurator from '../components/PromptConfigurator'
 
 const StyleGenerator = () => {
   const { user } = useUser()
@@ -22,32 +23,27 @@ const StyleGenerator = () => {
   const [styleImageUrl, setStyleImageUrl] = useState('')
   
   // Form inputs
-  const [formData, setFormData] = useState({
-    mainText: '',
-    secondaryText: '',
-    additionalInfo: '',
-    useFaceSwap: true
-  })
+  const [customPrompt, setCustomPrompt] = useState('')
+  const [quality, setQuality] = useState('auto')
+  const [useFaceSwap, setUseFaceSwap] = useState(true)
 
   const handleUserImageUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    const reader = new FileReader()
-    reader.onload = async (event) => {
-      const imageUrl = event.target.result
-      setUserImage(file)
-      setUserImageUrl(imageUrl)
-      
-      // Detect faces
-      try {
-        const result = await detectFaces(imageUrl)
-        setFaceDetectionResult(result)
-      } catch (err) {
-        console.error('Face detection failed:', err)
-      }
+    setUserImage(file)
+    
+    // Create object URL for display
+    const objectUrl = URL.createObjectURL(file)
+    setUserImageUrl(objectUrl)
+    
+    // Detect faces using the file blob
+    try {
+      const result = await detectFaces(file)
+      setFaceDetectionResult(result)
+    } catch (err) {
+      console.error('Face detection failed:', err)
     }
-    reader.readAsDataURL(file)
   }
 
   const handleStyleImageUpload = (e) => {
@@ -97,8 +93,9 @@ const StyleGenerator = () => {
         .from('user-images')
         .getPublicUrl(styleImageName)
       
-      // Generate prompt with user's text
-      const prompt = `Professional flyer design. ${formData.mainText ? `Main text: "${formData.mainText}".` : ''} ${formData.secondaryText ? `Secondary text: "${formData.secondaryText}".` : ''} ${formData.additionalInfo}`.trim()
+      // Generate prompt with custom configurator text
+      const basePrompt = 'Professional flyer design in the exact style of the reference image.'
+      const prompt = `${basePrompt} ${customPrompt}`.trim()
       
       // Call style transfer API
       const result = await generateStyleTransferFlyer(userPublicUrl, stylePublicUrl, prompt)
@@ -106,7 +103,7 @@ const StyleGenerator = () => {
       let finalImageUrl = ''
       
       // Handle face swap if enabled and face detected
-      if (formData.useFaceSwap && faceDetectionResult?.hasOneFace) {
+      if (useFaceSwap && faceDetectionResult?.hasOneFace) {
         try {
           const faceSwapResult = await performFaceSwap(userPublicUrl, result, {
             styleAware: true,
@@ -155,8 +152,8 @@ const StyleGenerator = () => {
         metadata: {
           style_image_url: stylePublicUrl,
           user_image_url: userPublicUrl,
-          main_text: formData.mainText,
-          secondary_text: formData.secondaryText
+          custom_prompt: customPrompt,
+          quality: quality
         }
       })
       
@@ -302,62 +299,33 @@ const StyleGenerator = () => {
           {/* Right Column - Form */}
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-lg font-semibold mb-4">3. Add Your Information</h2>
+              <h2 className="text-lg font-semibold mb-4">3. Customize Your Flyer</h2>
               
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Main Text (Name/Title)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.mainText}
-                    onChange={(e) => setFormData({...formData, mainText: e.target.value})}
-                    placeholder="e.g., John Doe, Summer Sale"
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Secondary Text (Subtitle)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.secondaryText}
-                    onChange={(e) => setFormData({...formData, secondaryText: e.target.value})}
-                    placeholder="e.g., CEO & Founder, 50% Off"
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Additional Information
-                  </label>
-                  <textarea
-                    value={formData.additionalInfo}
-                    onChange={(e) => setFormData({...formData, additionalInfo: e.target.value})}
-                    placeholder="Contact info, date/time, location, etc."
-                    rows={3}
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                {faceDetectionResult?.hasOneFace && (
+              {/* Prompt Configurator */}
+              <PromptConfigurator
+                basePrompt={{ title: 'Style Transfer' }}
+                customPrompt={customPrompt}
+                setCustomPrompt={setCustomPrompt}
+                quality={quality}
+                setQuality={setQuality}
+              />
+              
+              {/* Face Swap Option */}
+              {faceDetectionResult?.hasOneFace && (
+                <div className="mt-4 pt-4 border-t">
                   <label className="flex items-center space-x-3">
                     <input
                       type="checkbox"
-                      checked={formData.useFaceSwap}
-                      onChange={(e) => setFormData({...formData, useFaceSwap: e.target.checked})}
+                      checked={useFaceSwap}
+                      onChange={(e) => setUseFaceSwap(e.target.checked)}
                       className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
                     />
                     <span className="text-sm text-gray-700">
                       Apply face swap to match the style better
                     </span>
                   </label>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Generate Button */}

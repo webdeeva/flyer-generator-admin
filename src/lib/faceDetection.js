@@ -25,12 +25,41 @@ export const loadModels = async () => {
 }
 
 // Detect faces in an image
-export const detectFaces = async (imageElement) => {
+export const detectFaces = async (input) => {
   if (!modelsLoaded) {
     await loadModels()
   }
   
   try {
+    let imageElement = input
+    
+    // If input is a File/Blob, convert to image element
+    if (input instanceof File || input instanceof Blob) {
+      const img = new Image()
+      const url = URL.createObjectURL(input)
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve
+        img.onerror = reject
+        img.src = url
+      })
+      
+      imageElement = img
+      URL.revokeObjectURL(url) // Clean up
+    } else if (typeof input === 'string' && !input.startsWith('data:')) {
+      // If it's a URL string (not data URL), create image element
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve
+        img.onerror = reject
+        img.src = input
+      })
+      
+      imageElement = img
+    }
+    
     // Detect all faces with landmarks
     const detections = await faceapi
       .detectAllFaces(imageElement, new faceapi.TinyFaceDetectorOptions())
