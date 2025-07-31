@@ -24,7 +24,9 @@ const Generator = () => {
   const [showFaceOption, setShowFaceOption] = useState(false)
   const [faceDetectionResult, setFaceDetectionResult] = useState(null)
   const [isDetectingFace, setIsDetectingFace] = useState(false)
-  const [faceSwapStyle, setFaceSwapStyle] = useState('auto') // 'auto', 'realistic', 'artistic'
+  const [faceSwapStyle, setFaceSwapStyle] = useState('artistic') // 'auto', 'realistic', 'artistic' - default to artistic
+  const [maintainRealism, setMaintainRealism] = useState(false) // Checkbox for maintaining realism
+  const [maintainAttire, setMaintainAttire] = useState(false) // Checkbox for keeping original clothing
 
   useEffect(() => {
     fetchBasePrompts()
@@ -137,10 +139,34 @@ const Generator = () => {
 
       // Step 2: Generate flyer
       // Update prompt to preserve faces
-      const facePreservingPrompt = selectedPrompt.prompt_template.replace(
+      // Check if an artistic rendering style is selected
+      const isArtisticStyle = customPrompt.includes('cartoon') || 
+                             customPrompt.includes('illustration') || 
+                             customPrompt.includes('anime') || 
+                             customPrompt.includes('watercolor') ||
+                             customPrompt.includes('painting') ||
+                             customPrompt.includes('sketch') ||
+                             customPrompt.includes('pop art') ||
+                             customPrompt.includes('digital art') ||
+                             customPrompt.includes('vector')
+      
+      let facePreservingPrompt = selectedPrompt.prompt_template.replace(
         'Feature a large, confident central close-up of the subject',
         'Feature a large, confident central close-up of the subject, preserving the exact facial features and characteristics from the uploaded image'
       )
+      
+      // Add clothing color matching for artistic styles ONLY if maintainAttire is false
+      if (!maintainAttire && isArtisticStyle && customPrompt.includes('Color scheme:')) {
+        const colorMatch = customPrompt.match(/Color scheme: ([^.]+)/)
+        if (colorMatch) {
+          const colorScheme = colorMatch[1]
+          facePreservingPrompt += `. Modify the subject's clothing colors to harmonize with the ${colorScheme} color scheme while maintaining the clothing style and shape`
+        }
+      } else if (maintainAttire) {
+        // Explicitly preserve original attire
+        facePreservingPrompt += `. Keep the subject's original clothing and attire exactly as shown in the uploaded image, including colors, style, and all details`
+      }
+      
       const finalPrompt = facePreservingPrompt + ' ' + customPrompt
       console.log('Calling Segmind API with prompt:', finalPrompt)
       
@@ -192,7 +218,10 @@ const Generator = () => {
         // Determine if we should use style-aware face swap
         let useStyleAware = false
         
-        if (faceSwapStyle === 'artistic') {
+        // Override face swap style based on maintainRealism checkbox
+        if (maintainRealism) {
+          useStyleAware = false // Force realistic mode
+        } else if (faceSwapStyle === 'artistic') {
           useStyleAware = true
         } else if (faceSwapStyle === 'realistic') {
           useStyleAware = false
@@ -401,17 +430,43 @@ const Generator = () => {
                       </label>
                       
                       {hasRealFace && (
-                        <div className="ml-7 flex items-center space-x-3">
-                          <label className="text-xs text-gray-600">Style:</label>
-                          <select
-                            value={faceSwapStyle}
-                            onChange={(e) => setFaceSwapStyle(e.target.value)}
-                            className="text-xs px-2 py-1 border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                          >
-                            <option value="auto">Auto-detect</option>
-                            <option value="realistic">Realistic</option>
-                            <option value="artistic">Artistic blend</option>
-                          </select>
+                        <div className="ml-7 space-y-2">
+                          <div className="flex items-center space-x-3">
+                            <label className="text-xs text-gray-600">Style:</label>
+                            <select
+                              value={faceSwapStyle}
+                              onChange={(e) => setFaceSwapStyle(e.target.value)}
+                              className="text-xs px-2 py-1 border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            >
+                              <option value="auto">Auto-detect</option>
+                              <option value="realistic">Realistic</option>
+                              <option value="artistic">Artistic blend (Default)</option>
+                            </select>
+                          </div>
+                          
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={maintainRealism}
+                              onChange={(e) => setMaintainRealism(e.target.checked)}
+                              className="w-3 h-3 text-indigo-600 rounded focus:ring-indigo-500"
+                            />
+                            <span className="text-xs text-gray-600">
+                              Maintain photorealistic quality
+                            </span>
+                          </label>
+                          
+                          <label className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={maintainAttire}
+                              onChange={(e) => setMaintainAttire(e.target.checked)}
+                              className="w-3 h-3 text-indigo-600 rounded focus:ring-indigo-500"
+                            />
+                            <span className="text-xs text-gray-600">
+                              Keep original clothing/attire unchanged
+                            </span>
+                          </label>
                         </div>
                       )}
                     </div>
