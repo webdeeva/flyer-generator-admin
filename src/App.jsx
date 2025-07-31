@@ -8,6 +8,7 @@ import Gallery from './pages/Gallery'
 import Pricing from './pages/Pricing'
 import Landing from './pages/Landing'
 import Inpainting from './pages/Inpainting'
+import StyleGenerator from './pages/StyleGenerator'
 
 // Admin imports
 import AdminLayout from './admin/components/AdminLayout'
@@ -94,6 +95,18 @@ function App() {
           isSignedIn ? (
             <Layout>
               <Inpainting />
+            </Layout>
+          ) : (
+            <Navigate to="/sign-in" replace />
+          )
+        }
+      />
+      <Route
+        path="/style-generator"
+        element={
+          isSignedIn ? (
+            <Layout>
+              <StyleGenerator />
             </Layout>
           ) : (
             <Navigate to="/sign-in" replace />

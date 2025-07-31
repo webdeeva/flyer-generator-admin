@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { UserButton } from '@clerk/clerk-react'
-import { Home, Wand2, Image, CreditCard, Brush, Shield } from 'lucide-react'
+import { Home, Wand2, Image, CreditCard, Brush, Shield, Palette } from 'lucide-react'
 import { useAdmin } from '../hooks/useAdmin'
 
 const Layout = ({ children }) => {
@@ -10,6 +10,7 @@ const Layout = ({ children }) => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Generate', href: '/generate', icon: Wand2 },
+    { name: 'Style Transfer', href: '/style-generator', icon: Palette },
     { name: 'Inpainting', href: '/inpainting', icon: Brush },
     { name: 'Gallery', href: '/gallery', icon: Image },
     { name: 'Pricing', href: '/pricing', icon: CreditCard },

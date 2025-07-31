@@ -5,6 +5,7 @@ const SEGMIND_FACESWAP_URL = 'https://api.segmind.com/v1/faceswap-v4'
 const SEGMIND_FACESWAP_V3_URL = 'https://api.segmind.com/v1/faceswap-v3'
 const SEGMIND_MULTI_FACESWAP_URL = 'https://api.segmind.com/v1/faceswap-v3-multifaceswap'
 const SEGMIND_INPAINTING_URL = 'https://api.segmind.com/v1/flux-inpaint'
+const SEGMIND_STYLE_TRANSFER_URL = 'https://api.segmind.com/v1/ip-adapter-faceid-v2'
 const SEGMIND_API_KEY = import.meta.env.VITE_SEGMIND_API_KEY
 
 export const generateFlyer = async (prompt, imageUrl, options = {}) => {
@@ -237,6 +238,52 @@ export const performInpainting = async (imageUrl, maskUrl, prompt, options = {})
     return response.data
   } catch (error) {
     console.error('Error performing inpainting:', error)
+    throw error
+  }
+}
+
+export const generateStyleTransferFlyer = async (faceImageUrl, styleImageUrl, prompt, options = {}) => {
+  const {
+    negative_prompt = 'bad quality, low resolution, blurry',
+    num_inference_steps = 30,
+    guidance_scale = 7.5,
+    seed = Math.floor(Math.random() * 1000000),
+    samples = 1,
+    strength = 0.8,
+    scheduler = 'Euler',
+    sampler = 'euler_ancestral',
+    base64 = false
+  } = options
+
+  try {
+    const response = await axios.post(
+      SEGMIND_STYLE_TRANSFER_URL,
+      {
+        face_image: faceImageUrl,
+        ip_image: styleImageUrl,
+        prompt: prompt + ', professional flyer design, high quality, detailed',
+        negative_prompt,
+        num_inference_steps,
+        guidance_scale,
+        seed,
+        samples,
+        strength,
+        scheduler,
+        sampler,
+        base64
+      },
+      {
+        headers: {
+          'x-api-key': SEGMIND_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        responseType: 'blob'
+      }
+    )
+
+    return response.data
+  } catch (error) {
+    console.error('Error generating style transfer flyer:', error)
     throw error
   }
 }
