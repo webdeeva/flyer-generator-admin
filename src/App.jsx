@@ -8,7 +8,6 @@ import Gallery from './pages/Gallery'
 import Pricing from './pages/Pricing'
 import Landing from './pages/Landing'
 import Inpainting from './pages/Inpainting'
-import { AdminHelper } from './components/AdminHelper'
 
 // Admin imports
 import AdminLayout from './admin/components/AdminLayout'
@@ -25,7 +24,6 @@ function App() {
 
   return (
     <>
-      {isSignedIn && <AdminHelper />}
       <Routes>
       <Route path="/" element={isSignedIn ? <Navigate to="/dashboard" replace /> : <Landing />} />
       <Route path="/sign-in/*" element={<SignIn routing="path" path="/sign-in" forceRedirectUrl="/dashboard" />} />
