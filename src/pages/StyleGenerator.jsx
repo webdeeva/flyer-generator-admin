@@ -3,9 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { Upload, Image, AlertCircle, Loader, ArrowRight, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { generateStyleTransferFlyer, performFaceSwap } from '../lib/segmind'
 import { detectFaces } from '../lib/faceDetection'
 import PromptConfigurator from '../components/PromptConfigurator'
+
+// Create admin client for storage operations
+const supabaseAdmin = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY
+)
 
 const StyleGenerator = () => {
   const { user } = useUser()
@@ -72,24 +79,24 @@ const StyleGenerator = () => {
       const userImageName = `style-user-${user.id}-${Date.now()}.${userImage.name.split('.').pop()}`
       const styleImageName = `style-ref-${user.id}-${Date.now()}.${styleImage.name.split('.').pop()}`
       
-      const { data: userUpload, error: userError } = await supabase.storage
+      const { data: userUpload, error: userError } = await supabaseAdmin.storage
         .from('user-images')
         .upload(userImageName, userImage)
         
       if (userError) throw userError
       
-      const { data: styleUpload, error: styleError } = await supabase.storage
+      const { data: styleUpload, error: styleError } = await supabaseAdmin.storage
         .from('user-images')
         .upload(styleImageName, styleImage)
         
       if (styleError) throw styleError
       
       // Get public URLs
-      const { data: { publicUrl: userPublicUrl } } = supabase.storage
+      const { data: { publicUrl: userPublicUrl } } = supabaseAdmin.storage
         .from('user-images')
         .getPublicUrl(userImageName)
         
-      const { data: { publicUrl: stylePublicUrl } } = supabase.storage
+      const { data: { publicUrl: stylePublicUrl } } = supabaseAdmin.storage
         .from('user-images')
         .getPublicUrl(styleImageName)
       
@@ -112,12 +119,12 @@ const StyleGenerator = () => {
           
           if (faceSwapResult instanceof Blob) {
             const faceSwapName = `style-final-${user.id}-${Date.now()}.png`
-            const { data: faceSwapUpload, error: faceSwapError } = await supabase.storage
+            const { data: faceSwapUpload, error: faceSwapError } = await supabaseAdmin.storage
               .from('generated-flyers')
               .upload(faceSwapName, faceSwapResult)
               
             if (!faceSwapError) {
-              const { data: { publicUrl } } = supabase.storage
+              const { data: { publicUrl } } = supabaseAdmin.storage
                 .from('generated-flyers')
                 .getPublicUrl(faceSwapName)
               finalImageUrl = publicUrl
@@ -131,12 +138,12 @@ const StyleGenerator = () => {
       // Upload final result if no face swap
       if (!finalImageUrl && result instanceof Blob) {
         const resultName = `style-result-${user.id}-${Date.now()}.png`
-        const { data: resultUpload, error: resultError } = await supabase.storage
+        const { data: resultUpload, error: resultError } = await supabaseAdmin.storage
           .from('generated-flyers')
           .upload(resultName, result)
           
         if (!resultError) {
-          const { data: { publicUrl } } = supabase.storage
+          const { data: { publicUrl } } = supabaseAdmin.storage
             .from('generated-flyers')
             .getPublicUrl(resultName)
           finalImageUrl = publicUrl
