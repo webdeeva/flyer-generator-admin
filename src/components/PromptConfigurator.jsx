@@ -8,7 +8,8 @@ const PromptConfigurator = ({ basePrompt, customPrompt, setCustomPrompt, quality
     colors: '',
     style: '',
     additionalElements: [],
-    elementDetails: {} // Store details for each element
+    elementDetails: {}, // Store details for each element
+    hashtags: '' // For social media influencer prompts
   })
 
   const updateParameter = (key, value) => {
@@ -35,6 +36,13 @@ const PromptConfigurator = ({ basePrompt, customPrompt, setCustomPrompt, quality
     if (params.secondaryText) promptAdditions.push(`Secondary text: "${params.secondaryText}"`)
     if (params.colors) promptAdditions.push(`Color scheme: ${params.colors}`)
     if (params.style) promptAdditions.push(`Style: ${params.style}`)
+    
+    // Add hashtags for social media influencer prompts
+    const isSocialMediaPrompt = basePrompt?.title?.toLowerCase().includes('social media') || 
+                               basePrompt?.title?.toLowerCase().includes('influencer')
+    if (isSocialMediaPrompt && params.hashtags) {
+      promptAdditions.push(`Hashtags: ${params.hashtags}`)
+    }
     
     // Add elements with their details
     if (params.additionalElements.length > 0) {
@@ -148,6 +156,24 @@ const PromptConfigurator = ({ basePrompt, customPrompt, setCustomPrompt, quality
           <option value="Corporate and professional">Corporate & Professional</option>
         </select>
       </div>
+
+      {/* Hashtags input for social media influencer prompts */}
+      {(basePrompt?.title?.toLowerCase().includes('social media') || 
+        basePrompt?.title?.toLowerCase().includes('influencer')) && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Hashtags
+          </label>
+          <input
+            type="text"
+            value={parameters.hashtags}
+            onChange={(e) => updateParameter('hashtags', e.target.value)}
+            placeholder="e.g., #fashion #influencer #style #ootd #trending"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <p className="text-xs text-gray-500 mt-1">Enter hashtags separated by spaces</p>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">

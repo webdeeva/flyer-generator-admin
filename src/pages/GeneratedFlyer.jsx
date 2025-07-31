@@ -150,13 +150,6 @@ const GeneratedFlyer = () => {
             </div>
           </div>
 
-          {/* Prompt Info */}
-          {prompt && (
-            <div className="p-6 border-t">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Prompt Used:</h3>
-              <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">{prompt}</p>
-            </div>
-          )}
         </div>
 
         {/* Tips Section */}
