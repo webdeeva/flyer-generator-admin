@@ -80,24 +80,24 @@ const StyleGenerator = () => {
       const styleImageName = `style-ref-${user.id}-${Date.now()}.${styleImage.name.split('.').pop()}`
       
       const { data: userUpload, error: userError } = await supabaseAdmin.storage
-        .from('user-images')
+        .from('user-uploads')
         .upload(userImageName, userImage)
         
       if (userError) throw userError
       
       const { data: styleUpload, error: styleError } = await supabaseAdmin.storage
-        .from('user-images')
+        .from('user-uploads')
         .upload(styleImageName, styleImage)
         
       if (styleError) throw styleError
       
       // Get public URLs
       const { data: { publicUrl: userPublicUrl } } = supabaseAdmin.storage
-        .from('user-images')
+        .from('user-uploads')
         .getPublicUrl(userImageName)
         
       const { data: { publicUrl: stylePublicUrl } } = supabaseAdmin.storage
-        .from('user-images')
+        .from('user-uploads')
         .getPublicUrl(styleImageName)
       
       // Generate prompt with custom configurator text
