@@ -1,0 +1,37 @@
+{
+  "name": "React Development",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "VARIANT": "18"
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-tslint-plugin"
+      ]
+    }
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "npm install",
+  "forwardPorts": [3000, 3001],
+  "updateContentCommand": "npm install",
+  "postAttachCommand": "npm start",
+  "customizations": {
+    "codespaces": {
+      "openFiles": [
+        "src/App.jsx"
+      ]
+    }
+  }
+}
